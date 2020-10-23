@@ -1,12 +1,13 @@
-import React from 'react'
+import React,{useRef} from 'react'
 import { CssBaseline, Grid, Box, Typography, Container} from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import { Link } from 'react-router-dom'
 import firebase from '../../firebase'
 import Controls from "./InputField";
 import { useForm, Form } from './UseForm';
+import md5 from 'md5'
 
-function Copyright() {
+export const Copyright = ()=> {
 	return (
 		<Typography variant="body2" color="textSecondary" align="center">
 			{'Copyright © '}
@@ -64,16 +65,20 @@ export default function Register() {
 			else
 				temp.email = ""
 		}
+
 		if ('password' in fieldValues)
 			temp.password = fieldValues.password ? "" : "This field is required."
+
 		// if ('confirmPassword' in fieldValues)
 		//   temp.confirmPassword = fieldValues.confirmPassword ? "" : "This field is required."
+
 		if ('confirmPassword' in fieldValues){
 		if(!isPass())
 			temp.confirmPassword = "Password Invalid"
 		else
 			temp.confirmPassword = ''
 		}
+		
 		setErrors({
 			...temp
 		})
@@ -98,7 +103,8 @@ export default function Register() {
 		handleInputChange,
 		resetForm
 	} = useForm(initialFValues, true, validate);
-
+	const usersRef = useRef(firebase.database().ref('users'))
+	// console.log(usersRef)
 	const handleSubmit = e => {
 		e.preventDefault();
 		if (validate()) {
@@ -107,6 +113,20 @@ export default function Register() {
 			.createUserWithEmailAndPassword(values.email,values.password)
 			.then(createdUser =>{
 				console.log(createdUser)
+				// updateProfile
+				createdUser.user.updateProfile({
+					displayName:values.username,
+					photoURL:`http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`
+				})
+				.then(()=>{
+					saveUser(createdUser).then(()=>{
+						console.log("user saved")
+					})
+				})
+				.catch(err => {
+					alert(err)
+					// errors.push(err)
+				})
 
 			})
 			.catch(err => {
@@ -116,6 +136,12 @@ export default function Register() {
 		}
 	}
 
+	const saveUser = (createdUser) =>{
+		return usersRef.current(createdUser.user.uid).set({
+			name: createdUser.user.displayName,
+			avatar: createdUser.user.photoURL
+		})
+	}
 
 	return (
 		<Container component="main" maxWidth="xs">
