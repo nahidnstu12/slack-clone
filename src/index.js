@@ -9,23 +9,29 @@ import firebase from './firebase'
 import {createStore} from 'redux'
 import {Provider,connect} from 'react-redux'
 import {composeWithDevTools} from 'redux-devtools-extension'
-import {setUser} from './actions'
-
+import {setUser,clearUser} from './actions'
 import {BrowserRouter as Router,Switch,Route,withRouter} from 'react-router-dom'
 import rootReducer from './reducer';
 
 const store = createStore(rootReducer,composeWithDevTools())
 
-const Root = ({history,setUser}) =>{
+const Root = ({history,setUser,clearUser}) =>{
+
   useEffect(()=>{
     firebase.auth().onAuthStateChanged(user =>{
       if(user){
-      console.log(user)
-      setUser(user)
-      history.push('/')
+			console.log(user)
+			// setting user in global state
+			setUser(user)
+			history.push('/')
+      }
+      else{
+			// clearing user & redirect to login
+			history.push('/login')
+			clearUser()
       }
     })
-  },[])
+  },[setUser])
 
   return( 
     <Switch>
@@ -35,7 +41,7 @@ const Root = ({history,setUser}) =>{
     </Switch>
  )
 }
-const RootWithRouter = withRouter(connect(null,{setUser})(Root))
+const RootWithRouter = withRouter(connect(null,{setUser,clearUser})(Root))
 
 ReactDOM.render(
   // <React.StrictMode>

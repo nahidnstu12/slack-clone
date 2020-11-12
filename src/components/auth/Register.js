@@ -47,7 +47,7 @@ const initialFValues = {
 	confirmPassword: ''
 }
 
-export default function Register() {
+export default function Register({history}) {
 	const classes = useStyles();
 
 	const validate = (fieldValues = values) => {
@@ -112,7 +112,7 @@ export default function Register() {
 			firebase.auth()
 			.createUserWithEmailAndPassword(values.email,values.password)
 			.then(createdUser =>{
-				console.log(createdUser)
+				alert(createdUser)
 				// updateProfile
 				createdUser.user.updateProfile({
 					displayName:values.username,
@@ -120,7 +120,8 @@ export default function Register() {
 				})
 				.then(()=>{
 					saveUser(createdUser).then(()=>{
-						console.log("user saved")
+						alert("user saved")
+						history.push('/login')
 					})
 				})
 				.catch(err => {
